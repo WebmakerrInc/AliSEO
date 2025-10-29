@@ -5,8 +5,22 @@ class Activator {
 	private $plugin = 'slim-seo-link-manager/slim-seo-link-manager.php';
 
 	public function __construct() {
+		if ( ! $this->plugin_exists() ) {
+			return;
+		}
+
 		add_filter( "plugin_action_links_{$this->plugin}", [ $this, 'add_plugin_action_links' ] );
 		add_filter( 'plugin_row_meta', [ $this, 'add_plugin_meta_links' ], 10, 2 );
+	}
+
+	private function plugin_exists(): bool {
+		if ( ! defined( 'WP_PLUGIN_DIR' ) ) {
+			return false;
+		}
+
+		$plugin_dir = rtrim( WP_PLUGIN_DIR, '/\\' );
+
+		return file_exists( $plugin_dir . '/' . $this->plugin );
 	}
 
 	public function add_plugin_action_links( array $links ): array {
