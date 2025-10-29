@@ -6,14 +6,14 @@ use SlimSEOPro\Common;
 use SlimSEOPro\Assets;
 
 class Page {
-	private $manager;
+        private ?Manager $manager;
 	private $google_client;
 	private $analytics_data;
 
-	public function __construct( Manager $manager, GoogleClient $google_client, Data $analytics_data ) {
-		$this->manager        = $manager;
-		$this->google_client  = $google_client;
-		$this->analytics_data = $analytics_data;
+        public function __construct( ?Manager $manager, GoogleClient $google_client, Data $analytics_data ) {
+                $this->manager        = $manager;
+                $this->google_client  = $google_client;
+                $this->analytics_data = $analytics_data;
 
 		add_filter( 'slim_seo_settings_tabs', [ $this, 'add_tab' ], 20 );
 		add_filter( 'slim_seo_settings_panes', [ $this, 'add_pane' ], 20 );
@@ -27,10 +27,10 @@ class Page {
 	}
 
 	public function add_pane( array $panes ): array {
-		$status = $this->manager->option->get_license_status();
+                $status = $this->get_license_status();
 
-		if ( $status === 'active' ) {
-			$panes['analytics'] = '<div id="analytics" class="ss-tab-pane"><div id="ssp-analytics"></div></div>';
+                if ( $status === 'active' ) {
+                        $panes['analytics'] = '<div id="analytics" class="ss-tab-pane"><div id="ssp-analytics"></div></div>';
 
 			return $panes;
 		}
@@ -56,9 +56,9 @@ class Page {
 	public function enqueue(): void {
 		wp_enqueue_style( 'slim-seo-pro', SLIM_SEO_PRO_URL . 'css/slim-seo-pro.css', [], filemtime( SLIM_SEO_PRO_DIR . '/css/slim-seo-pro.css' ) );
 
-		if ( $this->manager->option->get_license_status() !== 'active' ) {
-			return;
-		}
+                if ( $this->get_license_status() !== 'active' ) {
+                        return;
+                }
 
 		$localized_data = $this->get_localized_data();
 
@@ -109,21 +109,29 @@ class Page {
 			return $localized_data;
 		}
 
-		$current_host = Common::get_current_host();
-		foreach ( $domains as $domain ) {
-			if ( str_contains( $domain, $current_host ) ) {
-				$current_site = $domain;
+                $current_host = Common::get_current_host();
+                foreach ( $domains as $domain ) {
+                        if ( str_contains( $domain, $current_host ) ) {
+                                $current_site = $domain;
 
-				Helper::set_current_site( $current_site );
+                                Helper::set_current_site( $current_site );
 
-				break;
-			}
-		}
+                                break;
+                        }
+                }
 
-		if ( empty( $current_site ) ) {
-			$localized_data['noDomainMatching'] = 1;
-		}
+                if ( empty( $current_site ) ) {
+                        $localized_data['noDomainMatching'] = 1;
+                }
 
-		return $localized_data;
-	}
+                return $localized_data;
+        }
+
+        private function get_license_status(): string {
+                if ( ! $this->manager ) {
+                        return 'active';
+                }
+
+                return $this->manager->option->get_license_status();
+        }
 }

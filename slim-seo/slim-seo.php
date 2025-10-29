@@ -35,7 +35,16 @@ define( 'SLIM_SEO_DELETE_404_LOGS_ACTION', 'delete_404_logs' );
 define( 'SLIM_SEO_VER', '4.7.0' );
 define( 'SLIM_SEO_DB_VER', 1 );
 
+define( 'SLIM_SEO_PRO_DIR', SLIM_SEO_DIR . 'pro/' );
+define( 'SLIM_SEO_PRO_URL', SLIM_SEO_URL . 'pro/' );
+define( 'SLIM_SEO_PRO_VER', '1.5.0' );
+define( 'SLIM_SEO_PRO_EMBEDDED', true );
+
 require __DIR__ . '/vendor/autoload.php';
+
+if ( file_exists( SLIM_SEO_PRO_DIR . 'vendor/autoload.php' ) ) {
+        require SLIM_SEO_PRO_DIR . 'vendor/autoload.php';
+}
 
 new Activator( __FILE__ );
 new Deactivator( __FILE__ );
@@ -45,3 +54,7 @@ $slim_seo->register_services();
 
 // Initialize at priority 5 to be able to disable core sitemaps completely which runs at priority 10.
 add_action( 'init', [ $slim_seo, 'init' ], 5 );
+
+if ( class_exists( '\\SlimSEOPro\\Loader' ) ) {
+        new \SlimSEOPro\Loader( true );
+}
