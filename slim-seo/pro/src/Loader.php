@@ -7,19 +7,26 @@ use SlimSEO\Updater\Settings as UpdaterSettings;
 use eLightUp\SlimSEO\Common\Settings\Post as SettingsPost;
 
 class Loader {
-	private $update_manager;
+        private ?Manager $update_manager = null;
+        private bool $embedded = false;
+        private string $license_status = 'inactive';
 
-	public function __construct() {
-		new Activator();
-		new Settings();
-		new FeaturedPlugins();
+        public function __construct( bool $embedded = false ) {
+                $this->embedded = $embedded;
 
-		$this->hooks();
-		$this->setup_updater();
+                if ( ! $this->embedded ) {
+                        new Activator();
+                }
 
-		if ( 'active' !== $this->update_manager->option->get_license_status() ) {
-			return;
-		}
+                new Settings();
+                new FeaturedPlugins();
+
+                $this->hooks();
+                $this->setup_updater();
+
+                if ( ! $this->is_license_active() ) {
+                        return;
+                }
 
 		if ( Settings::is_feature_active( 'link-manager' ) ) {
 			require SLIM_SEO_PRO_DIR . '/modules/slim-seo-link-manager/slim-seo-link-manager.php';
@@ -38,10 +45,10 @@ class Loader {
 			new Analytics\Api( $analytics_data );
 			new Analytics\Export( $analytics_data );
 
-			if ( is_admin() ) {
-				new Analytics\Page( $this->update_manager, $google_client, $analytics_data );
-			}
-		}
+                        if ( is_admin() ) {
+                                new Analytics\Page( $this->update_manager, $google_client, $analytics_data );
+                        }
+                }
 
 		if ( Settings::is_feature_active( 'content-analysis' ) ) {
 			SettingsPost::setup();
@@ -67,21 +74,37 @@ class Loader {
 		add_filter( 'elightup_plugin_updater_disallow_setup', [ $this, 'disallow_setup' ], 10, 2 );
 	}
 
-	private function setup_updater(): void {
-		Tab::setup();
+        private function setup_updater(): void {
+                if ( $this->embedded ) {
+                        $this->license_status = 'active';
 
-		$this->update_manager           = new Manager( [
-			'api_url'            => 'https://wpslimseo.com/index.php',
-			'my_account_url'     => 'https://wpslimseo.com/my-account/',
-			'buy_url'            => 'https://wpslimseo.com/products/slim-seo-pro/',
-			'slug'               => 'slim-seo-pro',
-			'settings_page'      => admin_url( 'options-general.php?page=slim-seo#license' ),
-			'settings_page_slug' => 'slim-seo',
-		] );
-		$settings                       = new UpdaterSettings( $this->update_manager, $this->update_manager->checker, $this->update_manager->option );
-		$this->update_manager->settings = $settings;
-		$this->update_manager->setup();
-	}
+                        return;
+                }
+
+                Tab::setup();
+
+                $this->update_manager           = new Manager( [
+                        'api_url'            => 'https://wpslimseo.com/index.php',
+                        'my_account_url'     => 'https://wpslimseo.com/my-account/',
+                        'buy_url'            => 'https://wpslimseo.com/products/slim-seo-pro/',
+                        'slug'               => 'slim-seo-pro',
+                        'settings_page'      => admin_url( 'options-general.php?page=slim-seo#license' ),
+                        'settings_page_slug' => 'slim-seo',
+                ] );
+                $settings                       = new UpdaterSettings( $this->update_manager, $this->update_manager->checker, $this->update_manager->option );
+                $this->update_manager->settings = $settings;
+                $this->update_manager->setup();
+
+                $this->license_status = $this->update_manager->option->get_license_status();
+        }
+
+        private function is_license_active(): bool {
+                if ( $this->embedded ) {
+                        return true;
+                }
+
+                return $this->license_status === 'active';
+        }
 
 	public function load_plugin_textdomain() {
 		load_plugin_textdomain( 'slim-seo-pro', false, SLIM_SEO_PRO_DIR . '/languages' );
