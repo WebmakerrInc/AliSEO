@@ -35,8 +35,7 @@ class Activator {
 
 	public function redirect( $plugin, $network_wide = false ) {
 		$is_cli    = 'cli' === php_sapi_name();
-		$basename  = defined( 'SLIM_SEO_PLUGIN_BASENAME' ) ? SLIM_SEO_PLUGIN_BASENAME : 'slim-seo/slim-seo.php';
-		$is_plugin = $basename === $plugin;
+		$is_plugin = 'slim-seo/slim-seo.php' === $plugin;
 
 		$action           = isset( $_POST['action'] ) ? sanitize_text_field( wp_unslash( $_POST['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 		$checked          = isset( $_POST['checked'] ) && is_array( $_POST['checked'] ) ? count( $_POST['checked'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
