@@ -5,6 +5,10 @@ class Activator {
 	private $plugin = 'slim-seo-pro/slim-seo-pro.php';
 
 	public function __construct() {
+		if ( defined( 'WEBMAKERRSEO_PLUGIN_BASENAME' ) ) {
+			$this->plugin = WEBMAKERRSEO_PLUGIN_BASENAME;
+		}
+
 		add_filter( "plugin_action_links_{$this->plugin}", [ $this, 'add_plugin_action_links' ] );
 		add_filter( 'plugin_row_meta', [ $this, 'add_plugin_meta_links' ], 10, 2 );
 
