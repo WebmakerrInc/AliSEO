@@ -53,6 +53,19 @@ class Manager {
 		if ( ! function_exists( 'get_plugin_data' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
-		$this->plugin = (object) get_plugin_data( WP_PLUGIN_DIR . "/{$this->slug}/{$this->slug}.php" );
+
+		$plugin_file = WP_PLUGIN_DIR . "/{$this->slug}/{$this->slug}.php";
+
+		if ( ! file_exists( $plugin_file ) ) {
+			$this->plugin = (object) [
+				'Name'        => $this->slug,
+				'Version'     => '0',
+				'plugin_path' => $this->slug . '/' . $this->slug . '.php',
+			];
+
+			return;
+		}
+
+		$this->plugin = (object) get_plugin_data( $plugin_file );
 	}
 }
